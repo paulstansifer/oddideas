@@ -13,3 +13,11 @@ cond : List<(Expr<Bool> Expr<Y>)> -> Expr<Y>
 ```
 
 In a sense, this typechecking seems easy. We can use constructors rather than functions if we have GADTs.
+
+The problem (well, *a* problem) relative to Romeo is this: when it comes time to typecheck macro arguments, we need to know the names that are in scope *and* their types. The straightforward way to solve this is that each binder in a macro needs to specify its type (so no more `BAtom`, we'd have `BAtomAndType`). This makes macros second-class compared to built-in variable bindings, which can often infer types. First idea: what if the types looked like this?:
+
+```
+one-armed-type-inferred-let : Var<X> Expr<X> Expr<Y> -> Expr<Y>
+```
+
+Then the rule is this: when typechecking macro arguments, toposort the DAG of imports. So, if something imports `Var<X>`, and we have already figured out what `Expr<X>` is, we can build a type environment. This rule doesn't exist inside the typesystem, fortunately; it's part of macro expansion.
